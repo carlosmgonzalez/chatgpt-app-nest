@@ -1,11 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   checkOrtographyUseCase,
   prosConsUseCase,
   prosConsStreamUseCase,
+  translateUseCase,
+  textToAudioUseCase,
 } from './use-cases';
-import { OrthographyDto, ProsConsDto } from './dto';
+import {
+  OrthographyDto,
+  ProsConsDto,
+  TranslateDto,
+  TextToAudioDto,
+} from './dto';
 import OpenAI from 'openai';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class ChatGptService {
@@ -25,5 +34,28 @@ export class ChatGptService {
 
   prosConsStream(prosConsDto: ProsConsDto) {
     return prosConsStreamUseCase(this.openai, prosConsDto.prompt);
+  }
+
+  translate(translateDto: TranslateDto) {
+    return translateUseCase(this.openai, translateDto);
+  }
+
+  textToAudio(textToAudioDto: TextToAudioDto) {
+    const { prompt, voice } = textToAudioDto;
+    return textToAudioUseCase(this.openai, prompt, voice);
+  }
+
+  getfilePath(fileId: string) {
+    const filePath = path.resolve(
+      __dirname,
+      `../../generated/audios/${fileId}.mp3`,
+    );
+
+    const isFileExist = fs.existsSync(filePath);
+
+    if (!isFileExist)
+      throw new NotFoundException(`Not found audio with id: ${fileId}`);
+
+    return filePath;
   }
 }
