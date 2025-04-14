@@ -6,9 +6,14 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Post,
   Res,
+  UploadedFile,
+  UseInterceptors,
+  // FileTypeValidator,
 } from '@nestjs/common';
 import { ChatGptService } from './chat-gpt.service';
 import {
@@ -21,6 +26,9 @@ import {
 import { Response } from 'express';
 import { ChatGptWsGateway } from 'src/chat-gpt-ws/chat-gpt-ws.gateway';
 import { TextToAudioDto } from './dto/text-to-audio.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { AudioToTextDto } from './dto/audio-to-text.dto';
 
 @Controller('chat-gpt')
 export class ChatGptController {
@@ -106,5 +114,53 @@ export class ChatGptController {
     const filePath = this.chatGptService.getfilePath(id);
 
     res.sendFile(filePath);
+  }
+
+  @Post('audio-to-text')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!file) return callback(new Error('File is empty'), false);
+
+        const fileType = file.mimetype.split('/')[1];
+        if (['m4a', 'mp4', 'mp3'].includes(fileType))
+          return callback(null, true);
+
+        //* Aca se puede hacer lo mismo que se hace en el ParseFilePipe:
+        // if (file.size > 1000 * 1024 * 5)
+        //   return callback(new Error('File is bigger tahn 5mb'), false);
+
+        callback(new Error('Wrong file type'), false);
+      },
+      storage: diskStorage({
+        destination: './generated/uploads',
+        filename: (req, file, callback) => {
+          if (!file) return callback(new Error('File is empty'), '');
+
+          const fileType = file.mimetype.split('/')[1];
+          const fileName = `${new Date().getTime()}.${fileType}`;
+
+          callback(null, fileName);
+        },
+      }),
+    }),
+  )
+  async audioToText(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 1000 * 1024 * 5,
+            message: 'File is bigger tahn 5mb',
+          }),
+          //* Aca se puede hacer lo mismo que en el fileFilter:
+          //new FileTypeValidator({fileType: "audio/*"})
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() audioToTextDto: AudioToTextDto,
+  ) {
+    return this.chatGptService.audioToText(file, audioToTextDto);
   }
 }

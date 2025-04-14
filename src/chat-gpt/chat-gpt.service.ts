@@ -5,12 +5,14 @@ import {
   prosConsStreamUseCase,
   translateUseCase,
   textToAudioUseCase,
+  audioToTextUseCase,
 } from './use-cases';
 import {
   OrthographyDto,
   ProsConsDto,
   TranslateDto,
   TextToAudioDto,
+  AudioToTextDto,
 } from './dto';
 import OpenAI from 'openai';
 import * as path from 'path';
@@ -57,5 +59,10 @@ export class ChatGptService {
       throw new NotFoundException(`Not found audio with id: ${fileId}`);
 
     return filePath;
+  }
+
+  audioToText(audioFile: Express.Multer.File, audioToTextDto: AudioToTextDto) {
+    const { prompt } = audioToTextDto;
+    return audioToTextUseCase(this.openai, audioFile, prompt);
   }
 }
