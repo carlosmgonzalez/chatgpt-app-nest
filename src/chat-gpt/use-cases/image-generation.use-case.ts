@@ -11,6 +11,8 @@ export const imageGenerationUseCase = async (
   openai: OpenAI,
   imageGenerationDto: ImageGenerationDto,
 ) => {
+  const SERVER_URL = process.env.SERVER_URL;
+
   const { prompt, maskImage, originalImage } = imageGenerationDto;
 
   if (!maskImage || !originalImage) {
@@ -24,7 +26,8 @@ export const imageGenerationUseCase = async (
     const openAiUrl = response.data[0].url;
     if (!openAiUrl) throw new Error('Url no exist');
 
-    const url = await downloadImageAsPng(openAiUrl);
+    const imageName = await downloadImageAsPng(openAiUrl);
+    const url = `${SERVER_URL}/chat-gpt/image-generation/${imageName}`;
 
     return {
       url,
@@ -33,7 +36,8 @@ export const imageGenerationUseCase = async (
     };
   }
 
-  const maskPath = await downloadBase64ImageAsPng(maskImage);
+  // const imagePath = await downloadImageAsPng();
+  const maskPath = await downloadBase64ImageAsPng(maskImage, true);
 
   if (!maskPath)
     throw new BadRequestException('Mask image could not be download');
@@ -48,7 +52,14 @@ export const imageGenerationUseCase = async (
   });
 
   const openAiUrl = response.data[0].url;
-  if (!openAiUrl) throw new Error('Url no exist');
+  if (!openAiUrl) throw new BadRequestException('OpenAiUrl not exist');
 
-  const url = await downloadImageAsPng(openAiUrl);
+  const imageName = await downloadImageAsPng(openAiUrl);
+  const url = `${SERVER_URL}/chat-gpt/image-generation/${imageName}`;
+
+  return {
+    url,
+    openAiUrl,
+    revised_prompt: response.data[0].revised_prompt,
+  };
 };

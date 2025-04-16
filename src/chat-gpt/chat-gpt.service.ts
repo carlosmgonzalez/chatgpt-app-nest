@@ -6,6 +6,7 @@ import {
   translateUseCase,
   textToAudioUseCase,
   audioToTextUseCase,
+  imageVariationUseCase,
 } from './use-cases';
 import {
   OrthographyDto,
@@ -19,6 +20,7 @@ import OpenAI from 'openai';
 import * as path from 'path';
 import * as fs from 'fs';
 import { imageGenerationUseCase } from './use-cases/image-generation.use-case';
+import { ImageVariationDto } from './dto/image-variation.dto';
 
 @Injectable()
 export class ChatGptService {
@@ -75,7 +77,7 @@ export class ChatGptService {
   getImagePath(fileId: string) {
     const filePath = path.resolve(
       __dirname,
-      `../../generated/images/${fileId}.png`,
+      `../../generated/images/${fileId}`,
     );
 
     const isFileExist = fs.existsSync(filePath);
@@ -84,5 +86,10 @@ export class ChatGptService {
       throw new NotFoundException(`Not found audio with id: ${fileId}`);
 
     return filePath;
+  }
+
+  imageVariation(imageVariationDto: ImageVariationDto) {
+    const { imageBaseUrl } = imageVariationDto;
+    return imageVariationUseCase(this.openai, imageBaseUrl);
   }
 }

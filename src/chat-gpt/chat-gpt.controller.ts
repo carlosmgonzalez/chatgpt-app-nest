@@ -25,6 +25,7 @@ import {
   ImageGenerationDto,
   TextToAudioDto,
   AudioToTextDto,
+  ImageVariationDto,
 } from './dto';
 import { Response } from 'express';
 import { ChatGptWsGateway } from 'src/chat-gpt-ws/chat-gpt-ws.gateway';
@@ -178,5 +179,10 @@ export class ChatGptController {
     const imagePath = this.chatGptService.getImagePath(id);
 
     res.sendFile(imagePath);
+  }
+
+  @Post('image-variation')
+  imageVariation(@Body() imageVariationDto: ImageVariationDto) {
+    return this.chatGptService.imageVariation(imageVariationDto);
   }
 }
