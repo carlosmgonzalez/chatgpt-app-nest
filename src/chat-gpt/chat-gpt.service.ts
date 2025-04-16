@@ -13,10 +13,12 @@ import {
   TranslateDto,
   TextToAudioDto,
   AudioToTextDto,
+  ImageGenerationDto,
 } from './dto';
 import OpenAI from 'openai';
 import * as path from 'path';
 import * as fs from 'fs';
+import { imageGenerationUseCase } from './use-cases/image-generation.use-case';
 
 @Injectable()
 export class ChatGptService {
@@ -64,5 +66,23 @@ export class ChatGptService {
   audioToText(audioFile: Express.Multer.File, audioToTextDto: AudioToTextDto) {
     const { prompt } = audioToTextDto;
     return audioToTextUseCase(this.openai, audioFile, prompt);
+  }
+
+  imageGeneration(imageGenerationDto: ImageGenerationDto) {
+    return imageGenerationUseCase(this.openai, imageGenerationDto);
+  }
+
+  getImagePath(fileId: string) {
+    const filePath = path.resolve(
+      __dirname,
+      `../../generated/images/${fileId}.png`,
+    );
+
+    const isFileExist = fs.existsSync(filePath);
+
+    if (!isFileExist)
+      throw new NotFoundException(`Not found audio with id: ${fileId}`);
+
+    return filePath;
   }
 }

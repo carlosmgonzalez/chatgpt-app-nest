@@ -22,13 +22,14 @@ import {
   TranslateDto,
   ProsConsStreamDto,
   TranslateNativeDto,
+  ImageGenerationDto,
+  TextToAudioDto,
+  AudioToTextDto,
 } from './dto';
 import { Response } from 'express';
 import { ChatGptWsGateway } from 'src/chat-gpt-ws/chat-gpt-ws.gateway';
-import { TextToAudioDto } from './dto/text-to-audio.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { AudioToTextDto } from './dto/audio-to-text.dto';
 
 @Controller('chat-gpt')
 export class ChatGptController {
@@ -162,5 +163,20 @@ export class ChatGptController {
     @Body() audioToTextDto: AudioToTextDto,
   ) {
     return this.chatGptService.audioToText(file, audioToTextDto);
+  }
+
+  @Post('image-generation')
+  imageGeneration(@Body() imageGenerationDto: ImageGenerationDto) {
+    return this.chatGptService.imageGeneration(imageGenerationDto);
+  }
+
+  @Get('image-generation/:id')
+  getImageGeneration(@Param('id') id: string, @Res() res: Response) {
+    res.setHeader('Content-Type', 'image/png');
+    res.status(HttpStatus.OK);
+
+    const imagePath = this.chatGptService.getImagePath(id);
+
+    res.sendFile(imagePath);
   }
 }
