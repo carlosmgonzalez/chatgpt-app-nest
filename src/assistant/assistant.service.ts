@@ -6,6 +6,7 @@ import { QuestionDto } from './dto/question.dto';
 import { createRunUseCase } from './use-cases/create-run.use-case';
 import { checkRunStatusCompletedUseCase } from './use-cases/check-run-status-completed.use-case';
 import { getMessagesThreadUseCase } from './use-cases/get-messages-thread.use-case';
+import { LoadMessagesDto } from './dto/load-messages.dto';
 
 @Injectable()
 export class AssistantService {
@@ -31,6 +32,15 @@ export class AssistantService {
 
     // Obtenemos los mensajes del thread mejor organizado [{role, content}];
     const messages = await getMessagesThreadUseCase(this.openai, threadId);
+
+    return messages;
+  }
+
+  async loadMessages(loadMessagesDto: LoadMessagesDto) {
+    const messages = await getMessagesThreadUseCase(
+      this.openai,
+      loadMessagesDto.threadId,
+    );
 
     return messages;
   }
