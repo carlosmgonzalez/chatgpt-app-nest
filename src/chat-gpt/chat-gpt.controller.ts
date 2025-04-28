@@ -13,7 +13,6 @@ import {
   Res,
   UploadedFile,
   UseInterceptors,
-  // FileTypeValidator,
 } from '@nestjs/common';
 import { ChatGptService } from './chat-gpt.service';
 import {

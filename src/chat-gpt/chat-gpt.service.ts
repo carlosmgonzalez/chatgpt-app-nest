@@ -21,6 +21,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { imageGenerationUseCase } from './use-cases/image-generation.use-case';
 import { ImageVariationDto } from './dto/image-variation.dto';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ChatGptService {
@@ -91,5 +92,62 @@ export class ChatGptService {
   imageVariation(imageVariationDto: ImageVariationDto) {
     const { imageBaseUrl } = imageVariationDto;
     return imageVariationUseCase(this.openai, imageBaseUrl);
+  }
+
+  @Cron('0 * * * *') // Run every hour at minute 0
+  cleanOldAudioFiles() {
+    const folderPath = path.resolve(__dirname, '../../generated/audios/');
+    const oneHourAgo = Date.now() - 60 * 60 * 1000; // 1 hour in milliseconds
+
+    if (!fs.existsSync(folderPath)) return;
+
+    const files = fs.readdirSync(folderPath);
+
+    files.forEach((file) => {
+      const filePath = path.join(folderPath, file);
+      const stats = fs.statSync(filePath);
+
+      if (stats.mtimeMs < oneHourAgo) {
+        fs.unlinkSync(filePath);
+      }
+    });
+  }
+
+  @Cron('0 * * * *') // Run every hour at minute 0
+  cleanOldImagesFiles() {
+    const folderPath = path.resolve(__dirname, '../../generated/images/');
+    const oneHourAgo = Date.now() - 60 * 60 * 1000; // 1 hour in milliseconds
+
+    if (!fs.existsSync(folderPath)) return;
+
+    const files = fs.readdirSync(folderPath);
+
+    files.forEach((file) => {
+      const filePath = path.join(folderPath, file);
+      const stats = fs.statSync(filePath);
+
+      if (stats.mtimeMs < oneHourAgo) {
+        fs.unlinkSync(filePath);
+      }
+    });
+  }
+
+  @Cron('0 * * * *') // Run every hour at minute 0
+  cleanOldUploadedFiles() {
+    const folderPath = path.resolve(__dirname, '../../generated/uploads/');
+    const oneHourAgo = Date.now() - 60 * 60 * 1000; // 1 hour in milliseconds
+
+    if (!fs.existsSync(folderPath)) return;
+
+    const files = fs.readdirSync(folderPath);
+
+    files.forEach((file) => {
+      const filePath = path.join(folderPath, file);
+      const stats = fs.statSync(filePath);
+
+      if (stats.mtimeMs < oneHourAgo) {
+        fs.unlinkSync(filePath);
+      }
+    });
   }
 }
